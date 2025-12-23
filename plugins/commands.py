@@ -127,42 +127,42 @@ async def start(client, message):
         except Exception as e:
             print(e)
             return await message.reply_text("something wrong with force subscribe.")
-    if len(message.command) == 2 and message.command[1] in ["subscribe", "error", "okay", "help"]:
+if len(message.command) == 2:
 
-    buttons = [[
-        InlineKeyboardButton(
-            '⤬ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ⤬',
-            url=f'http://t.me/{temp.U_NAME}?startgroup=true'
-        )
-    ], [
-        InlineKeyboardButton('ᴀʙᴏᴜᴛ', callback_data='about'),
-        InlineKeyboardButton('ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ', url=CHNL_LNK)
-    ], [
-        InlineKeyboardButton('ʜᴇʟᴘ', callback_data='help'),
-        InlineKeyboardButton('ᴇᴀʀɴ ᴍᴏɴᴇʏ', callback_data="shortlink_info")
-    ]]
+    data = message.command[1]
 
-    if PREMIUM_AND_REFERAL_MODE:
-        buttons.append([
+    if data in ["subscribe", "error", "okay", "help"]:
+        buttons = [[
             InlineKeyboardButton(
-                'ᴘʀᴇᴍɪᴜᴍ ᴀɴᴅ ʀᴇғᴇʀʀᴀʟ',
-                callback_data='subscription'
+                '⤬ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ⤬',
+                url=f'http://t.me/{temp.U_NAME}?startgroup=true'
             )
-        ])
+        ], [
+            InlineKeyboardButton('ᴀʙᴏᴜᴛ', callback_data='about'),
+            InlineKeyboardButton('ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ', url=CHNL_LNK)
+        ]]
 
-    reply_markup = InlineKeyboardMarkup(buttons)
+        if PREMIUM_AND_REFERAL_MODE:
+            buttons.append([
+                InlineKeyboardButton(
+                    'ᴘʀᴇᴍɪᴜᴍ ᴀɴᴅ ʀᴇғᴇʀʀᴀʟ',
+                    callback_data='subscription'
+                )
+            ])
 
-    await message.reply_photo(
-        photo=random.choice(PICS),
-        caption=script.START_TXT.format(
-            message.from_user.mention,
-            temp.U_NAME,
-            temp.B_NAME
-        ),
-        reply_markup=reply_markup,
-        parse_mode=enums.ParseMode.HTML
-    )
-    return
+        reply_markup = InlineKeyboardMarkup(buttons)
+
+        await message.reply_photo(
+            photo=random.choice(PICS),
+            caption=script.START_TXT.format(
+                message.from_user.mention,
+                temp.U_NAME,
+                temp.B_NAME
+            ),
+            reply_markup=reply_markup,
+            parse_mode=enums.ParseMode.HTML
+        )
+        return
 
 
 data = message.command[1]
@@ -1423,6 +1423,7 @@ async def purge_requests(client, message):
             parse_mode=enums.ParseMode.MARKDOWN,
             disable_web_page_preview=True
         )
+
 
 
 
