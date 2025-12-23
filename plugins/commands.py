@@ -1051,3 +1051,346 @@ async def deletemultiplefiles(bot, message):
         parse_mode=enums.ParseMode.HTML
     )
     
+@Client.on_message(filters.command("shortlink"))
+async def shortlink(bot, message):
+    userid = message.from_user.id if message.from_user else None
+    if not userid:
+        return await message.reply(f"You are anonymous admin. Turn off anonymous admin and try again this command")
+    chat_type = message.chat.type
+    if chat_type == enums.ChatType.PRIVATE:
+        return await message.reply_text(f"<b>Hey {message.from_user.mention}, This command only works on groups !\n\n<u>Follow These Steps to Connect Shortener:</u>\n\n1. Add Me in Your Group with Full Admin Rights\n\n2. After Adding in Grp, Set your Shortener\n\nSend this command in your group\n\n—> /shortlink ""{your_shortener_website_name} {your_shortener_api}\n\n#Sample:-\n/shortlink kpslink.in CAACAgUAAxkBAAEJ4GtkyPgEzpIUC_DSmirN6eFWp4KInAACsQoAAoHSSFYub2D15dGHfy8E\n\nThat's it!!! Enjoy Earning Money 💲\n\n[[[ Trusted Earning Site - https://kpslink.in]]]\n\nIf you have any Doubts, Feel Free to Ask me - @kingvj01\n\n(Puriyala na intha contact la message pannunga - @kngvj01)</b>")
+    elif chat_type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        grpid = message.chat.id
+        title = message.chat.title
+    else:
+        return
+    data = message.text
+    userid = message.from_user.id
+    user = await bot.get_chat_member(grpid, userid)
+    if user.status != enums.ChatMemberStatus.ADMINISTRATOR and user.status != enums.ChatMemberStatus.OWNER and str(userid) not in ADMINS:
+        return await message.reply_text("<b>You don't have access to use this command!\n\nAdd Me to Your Own Group as Admin and Try This Command\n\nFor More PM Me With This Command</b>")
+    else:
+        pass
+    try:
+        command, shortlink_url, api = data.split(" ")
+    except:
+        return await message.reply_text("<b>Command Incomplete :(\n\nGive me a shortener website link and api along with the command !\n\nFormat: <code>/shortlink kpslink.in e3d82cdf8f9f4783c42170b515d1c271fb1c4500</code></b>")
+    reply = await message.reply_text("<b>Please Wait...</b>")
+    shortlink_url = re.sub(r"https?://?", "", shortlink_url)
+    shortlink_url = re.sub(r"[:/]", "", shortlink_url)
+    await save_group_settings(grpid, 'shortlink', shortlink_url)
+    await save_group_settings(grpid, 'shortlink_api', api)
+    await save_group_settings(grpid, 'is_shortlink', True)
+    await reply.edit_text(f"<b>Successfully added shortlink API for {title}.\n\nCurrent Shortlink Website: <code>{shortlink_url}</code>\nCurrent API: <code>{api}</code></b>")
+
+@Client.on_message(filters.command("setshortlinkoff"))
+async def offshortlink(bot, message):
+    chat_type = message.chat.type
+    if chat_type == enums.ChatType.PRIVATE:
+        return await message.reply_text("I will Work Only in group")
+    elif chat_type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        grpid = message.chat.id
+        title = message.chat.title
+    else:
+        return
+    userid = message.from_user.id
+    user = await bot.get_chat_member(grpid, userid)
+    if user.status != enums.ChatMemberStatus.ADMINISTRATOR and user.status != enums.ChatMemberStatus.OWNER and str(userid) not in ADMINS:
+        return await message.reply_text("<b>You don't have access to use this command!\n\nAdd Me to Your Own Group as Admin and Try This Command\n\nFor More PM Me With This Command</b>")
+    else:
+        pass
+    await save_group_settings(grpid, 'is_shortlink', False)
+    # ENABLE_SHORTLINK = False
+    return await message.reply_text("Successfully disabled shortlink")
+
+@Client.on_message(filters.command("setshortlinkon"))
+async def onshortlink(bot, message):
+    chat_type = message.chat.type
+    if chat_type == enums.ChatType.PRIVATE:
+        return await message.reply_text("I will Work Only in group")
+    elif chat_type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        grpid = message.chat.id
+        title = message.chat.title
+    else:
+        return
+    userid = message.from_user.id
+    user = await bot.get_chat_member(grpid, userid)
+    if user.status != enums.ChatMemberStatus.ADMINISTRATOR and user.status != enums.ChatMemberStatus.OWNER and str(userid) not in ADMINS:
+        return await message.reply_text("<b>You don't have access to use this command!\n\nAdd Me to Your Own Group as Admin and Try This Command\n\nFor More PM Me With This Command</b>")
+    else:
+        pass
+    settings = await get_settings(grpid)
+    if not settings['shortlink']:
+        return await message.reply_text("**First Add Your Shortlink Url And Api By /shortlink Command, Then Turn Me On.**")
+    await save_group_settings(grpid, 'is_shortlink', True)
+    # ENABLE_SHORTLINK = True
+    return await message.reply_text("Successfully enabled shortlink")
+
+@Client.on_message(filters.command("shortlink_info"))
+async def showshortlink(bot, message):
+    userid = message.from_user.id if message.from_user else None
+    if not userid:
+        return await message.reply(f"You are anonymous admin. Turn off anonymous admin and try again this command")
+    chat_type = message.chat.type
+    if chat_type == enums.ChatType.PRIVATE:
+        return await message.reply_text(f"<b>Hey {message.from_user.mention}, This Command Only Works in Group\n\nTry this command in your own group, if you are using me in your group</b>")
+    elif chat_type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        grpid = message.chat.id
+        title = message.chat.title
+    else:
+        return
+    chat_id=message.chat.id
+    userid = message.from_user.id
+    user = await bot.get_chat_member(grpid, userid)
+    if user.status != enums.ChatMemberStatus.ADMINISTRATOR and user.status != enums.ChatMemberStatus.OWNER and str(userid) not in ADMINS:
+        return await message.reply_text("<b>Tʜɪs ᴄᴏᴍᴍᴀɴᴅ Wᴏʀᴋs Oɴʟʏ Fᴏʀ ᴛʜɪs Gʀᴏᴜᴘ Oᴡɴᴇʀ/Aᴅᴍɪɴ\n\nTʀʏ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ɪɴ ʏᴏᴜʀ Oᴡɴ Gʀᴏᴜᴘ, Iғ Yᴏᴜ Aʀᴇ Usɪɴɢ Mᴇ Iɴ Yᴏᴜʀ Gʀᴏᴜᴘ</b>")
+    else:
+        settings = await get_settings(chat_id) #fetching settings for group
+        if 'shortlink' in settings.keys() and 'tutorial' in settings.keys():
+            su = settings['shortlink']
+            sa = settings['shortlink_api']
+            st = settings['tutorial']
+            return await message.reply_text(f"<b>Shortlink Website: <code>{su}</code>\n\nApi: <code>{sa}</code>\n\nTutorial: <code>{st}</code></b>")
+        elif 'shortlink' in settings.keys() and 'tutorial' not in settings.keys():
+            su = settings['shortlink']
+            sa = settings['shortlink_api']
+            return await message.reply_text(f"<b>Shortener Website: <code>{su}</code>\n\nApi: <code>{sa}</code>\n\nTutorial Link Not Connected\n\nYou can Connect Using /set_tutorial command</b>")
+        elif 'shortlink' not in settings.keys() and 'tutorial' in settings.keys():
+            st = settings['tutorial']
+            return await message.reply_text(f"<b>Tutorial: <code>{st}</code>\n\nShortener Url Not Connected\n\nYou can Connect Using /shortlink command</b>")
+        else:
+            return await message.reply_text("Shortener url and Tutorial Link Not Connected. Check this commands, /shortlink and /set_tutorial")
+
+
+@Client.on_message(filters.command("set_tutorial"))
+async def settutorial(bot, message):
+    userid = message.from_user.id if message.from_user else None
+    if not userid:
+        return await message.reply(f"You are anonymous admin. Turn off anonymous admin and try again this command")
+    chat_type = message.chat.type
+    if chat_type == enums.ChatType.PRIVATE:
+        return await message.reply_text("This Command Work Only in group\n\nTry it in your own group")
+    elif chat_type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        grpid = message.chat.id
+        title = message.chat.title
+    else:
+        return
+    userid = message.from_user.id
+    user = await bot.get_chat_member(grpid, userid)
+    if user.status != enums.ChatMemberStatus.ADMINISTRATOR and user.status != enums.ChatMemberStatus.OWNER and str(userid) not in ADMINS:
+        return
+    else:
+        pass
+    if len(message.command) == 1:
+        return await message.reply("<b>Give me a tutorial link along with this command\n\nCommand Usage: /set_tutorial your tutorial link</b>")
+    elif len(message.command) == 2:
+        reply = await message.reply_text("<b>Please Wait...</b>")
+        tutorial = message.command[1]
+        await save_group_settings(grpid, 'tutorial', tutorial)
+        await save_group_settings(grpid, 'is_tutorial', True)
+        await reply.edit_text(f"<b>Successfully Added Tutorial\n\nHere is your tutorial link for your group {title} - <code>{tutorial}</code></b>")
+    else:
+        return await message.reply("<b>You entered Incorrect Format\n\nFormat: /set_tutorial your tutorial link</b>")
+
+@Client.on_message(filters.command("remove_tutorial"))
+async def removetutorial(bot, message):
+    userid = message.from_user.id if message.from_user else None
+    if not userid:
+        return await message.reply(f"You are anonymous admin. Turn off anonymous admin and try again this command")
+    chat_type = message.chat.type
+    if chat_type == enums.ChatType.PRIVATE:
+        return await message.reply_text("This Command Work Only in group\n\nTry it in your own group")
+    elif chat_type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        grpid = message.chat.id
+        title = message.chat.title
+    else:
+        return
+    userid = message.from_user.id
+    user = await bot.get_chat_member(grpid, userid)
+    if user.status != enums.ChatMemberStatus.ADMINISTRATOR and user.status != enums.ChatMemberStatus.OWNER and str(userid) not in ADMINS:
+        return
+    else:
+        pass
+    reply = await message.reply_text("<b>Please Wait...</b>")
+    await save_group_settings(grpid, 'tutorial', "")
+    await save_group_settings(grpid, 'is_tutorial', False)
+    await reply.edit_text(f"<b>Successfully Removed Your Tutorial Link!!!</b>")
+
+@Client.on_message(filters.command("restart") & filters.user(ADMINS))
+async def stop_button(bot, message):
+    msg = await bot.send_message(text="**🔄 𝙿𝚁𝙾𝙲𝙴𝚂𝚂𝙴𝚂 𝚂𝚃𝙾𝙿𝙴𝙳. 𝙱𝙾𝚃 𝙸𝚂 𝚁𝙴𝚂𝚃𝙰𝚁𝚃𝙸𝙽𝙶...**", chat_id=message.chat.id)       
+    await asyncio.sleep(3)
+    await msg.edit("**✅️ 𝙱𝙾𝚃 𝙸𝚂 𝚁𝙴𝚂𝚃𝙰𝚁𝚃𝙴𝙳. 𝙽𝙾𝚆 𝚈𝙾𝚄 𝙲𝙰𝙽 𝚄𝚂𝙴 𝙼𝙴**")
+    os.execl(sys.executable, sys.executable, *sys.argv)
+
+@Client.on_message(filters.command("nofsub"))
+async def nofsub(client, message):
+    userid = message.from_user.id if message.from_user else None
+    if not userid:
+        return await message.reply(f"<b>You are anonymous admin. Turn off anonymous admin and try again this command</b>")
+    chat_type = message.chat.type
+    if chat_type == enums.ChatType.PRIVATE:
+        return await message.reply_text("<b>This Command Work Only in group\n\nTry it in your own group</b>")
+    elif chat_type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        grpid = message.chat.id
+        title = message.chat.title
+    else:
+        return
+    userid = message.from_user.id
+    user = await client.get_chat_member(grpid, userid)
+    if user.status != enums.ChatMemberStatus.ADMINISTRATOR and user.status != enums.ChatMemberStatus.OWNER and str(userid) not in ADMINS:
+        return
+    else:
+        pass
+    await save_group_settings(grpid, 'fsub', None)
+    await message.reply_text(f"<b>Successfully removed force subscribe from {title}.</b>")
+
+@Client.on_message(filters.command('fsub'))
+async def fsub(client, message):
+    userid = message.from_user.id if message.from_user else None
+    if not userid:
+        return await message.reply(f"<b>You are anonymous admin. Turn off anonymous admin and try again this command</b>")
+    chat_type = message.chat.type
+    if chat_type == enums.ChatType.PRIVATE:
+        return await message.reply_text("<b>This Command Work Only in group\n\nTry it in your own group</b>")
+    elif chat_type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        grpid = message.chat.id
+        title = message.chat.title
+    else:
+        return
+    userid = message.from_user.id
+    user = await client.get_chat_member(grpid, userid)
+    if user.status != enums.ChatMemberStatus.ADMINISTRATOR and user.status != enums.ChatMemberStatus.OWNER and str(userid) not in ADMINS:
+        return
+    else:
+        pass
+    try:
+        ids = message.text.split(" ", 1)[1]
+        fsub_ids = [int(id) for id in ids.split()]
+    except IndexError:
+        return await message.reply_text("<b>Command Incomplete!\n\nAdd Multiple Channel By Seperate Space. Like: /fsub id1 id2 id3</b>")
+    except ValueError:
+        return await message.reply_text('<b>Make Sure Ids are Integer.</b>')        
+    channels = "Channels:\n"
+    for id in fsub_ids:
+        try:
+            chat = await client.get_chat(id)
+        except Exception as e:
+            return await message.reply_text(f"<b>{id} is invalid!\nMake sure this bot admin in that channel.\n\nError - {e}</b>")
+        if chat.type != enums.ChatType.CHANNEL:
+            return await message.reply_text(f"<b>{id} is not channel.</b>")
+        channels += f'{chat.title}\n'
+    await save_group_settings(grpid, 'fsub', fsub_ids)
+    await message.reply_text(f"<b>Successfully set force channels for {title} to\n\n{channels}\n\nYou can remove it by /nofsub.</b>")
+
+
+@Client.on_message(filters.command("add_premium"))
+async def give_premium_cmd_handler(client, message):
+    if PREMIUM_AND_REFERAL_MODE == False:
+        return 
+    user_id = message.from_user.id
+    if user_id not in ADMINS:
+        await message.delete()
+        return
+    if len(message.command) == 3:
+        user_id = int(message.command[1])  # Convert the user_id to integer
+        time = message.command[2]        
+        seconds = await get_seconds(time)
+        if seconds > 0:
+            expiry_time = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
+            user_data = {"id": user_id, "expiry_time": expiry_time} 
+            await db.update_user(user_data)  # Use the update_user method to update or insert user data
+            await message.reply_text("Premium access added to the user.")            
+            await client.send_message(
+                chat_id=user_id,
+                text=f"<b>ᴘʀᴇᴍɪᴜᴍ ᴀᴅᴅᴇᴅ ᴛᴏ ʏᴏᴜʀ ᴀᴄᴄᴏᴜɴᴛ ꜰᴏʀ {time} ᴇɴᴊᴏʏ 😀\n</b>",                
+            )
+        else:
+            await message.reply_text("Invalid time format. Please use '1day for days', '1hour for hours', or '1min for minutes', or '1month for months' or '1year for year'")
+    else:
+        await message.reply_text("<b>Usage: /add_premium user_id time \n\nExample /add_premium 1252789 10day \n\n(e.g. for time units '1day for days', '1hour for hours', or '1min for minutes', or '1month for months' or '1year for year')</b>")
+
+@Client.on_message(filters.command("remove_premium"))
+async def remove_premium_cmd_handler(client, message):
+    if PREMIUM_AND_REFERAL_MODE == False:
+        return 
+    user_id = message.from_user.id
+    if user_id not in ADMINS:
+        await message.delete()
+        return
+    if len(message.command) == 2:
+        user_id = int(message.command[1])  # Convert the user_id to integer
+      #  time = message.command[2]
+        time = "1s"
+        seconds = await get_seconds(time)
+        if seconds > 0:
+            expiry_time = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
+            user_data = {"id": user_id, "expiry_time": expiry_time}  # Using "id" instead of "user_id"
+            await db.update_user(user_data)  # Use the update_user method to update or insert user data
+            await message.reply_text("Premium access removed to the user.")
+            await client.send_message(
+                chat_id=user_id,
+                text="<b>premium removed by admins \n\n Contact Admin if this is mistake \n\n 👮 Admin : {} \n</b>".format(OWNER_LNK),                
+            )
+        else:
+            await message.reply_text("Invalid time format.'")
+    else:
+        await message.reply_text("Usage: /remove_premium user_id")
+
+@Client.on_message(filters.command("plan"))
+async def plans_cmd_handler(client, message): 
+    if PREMIUM_AND_REFERAL_MODE == False:
+        return 
+    btn = [            
+        [InlineKeyboardButton("ꜱᴇɴᴅ ᴘᴀʏᴍᴇɴᴛ ʀᴇᴄᴇɪᴘᴛ 🧾", url=OWNER_LNK)],
+        [InlineKeyboardButton("⚠️ ᴄʟᴏsᴇ / ᴅᴇʟᴇᴛᴇ ⚠️", callback_data="close_data")]
+    ]
+    reply_markup = InlineKeyboardMarkup(btn)
+    await message.reply_photo(
+        photo=PAYMENT_QR,
+        caption=PAYMENT_TEXT,
+        reply_markup=reply_markup
+    )
+
+@Client.on_message(filters.command("myplan"))
+async def check_plans_cmd(client, message):
+    if PREMIUM_AND_REFERAL_MODE == False:
+        return 
+    user_id  = message.from_user.id
+    if await db.has_premium_access(user_id):         
+        remaining_time = await db.check_remaining_uasge(user_id)             
+        expiry_time = remaining_time + datetime.datetime.now()
+        await message.reply_text(f"**Your plans details are :\n\nRemaining Time : {remaining_time}\n\nExpirytime : {expiry_time}**")
+    else:
+        btn = [ 
+            [InlineKeyboardButton("ɢᴇᴛ ғʀᴇᴇ ᴛʀᴀɪʟ ғᴏʀ 𝟻 ᴍɪɴᴜᴛᴇꜱ ☺️", callback_data="get_trail")],
+            [InlineKeyboardButton("ʙᴜʏ sᴜʙsᴄʀɪᴘᴛɪᴏɴ : ʀᴇᴍᴏᴠᴇ ᴀᴅs", callback_data="buy_premium")],
+            [InlineKeyboardButton("⚠️ ᴄʟᴏsᴇ / ᴅᴇʟᴇᴛᴇ ⚠️", callback_data="close_data")]
+        ]
+        reply_markup = InlineKeyboardMarkup(btn)
+        m=await message.reply_sticker("CAACAgIAAxkBAAIBTGVjQbHuhOiboQsDm35brLGyLQ28AAJ-GgACglXYSXgCrotQHjibHgQ")         
+        await message.reply_text(f"**😢 You Don't Have Any Premium Subscription.\n\n Check Out Our Premium /plan**",reply_markup=reply_markup)
+        await asyncio.sleep(2)
+        await m.delete()
+
+@Client.on_message(filters.command("totalrequests") & filters.private & filters.user(ADMINS))
+async def total_requests(client, message):
+    if join_db().isActive():
+        total = await join_db().get_all_users_count()
+        await message.reply_text(
+            text=f"Total Requests: {total}",
+            parse_mode=enums.ParseMode.MARKDOWN,
+            disable_web_page_preview=True
+        )
+
+@Client.on_message(filters.command("purgerequests") & filters.private & filters.user(ADMINS))
+async def purge_requests(client, message):   
+    if join_db().isActive():
+        await join_db().delete_all_users()
+        await message.reply_text(
+            text="Purged All Requests.",
+            parse_mode=enums.ParseMode.MARKDOWN,
+            disable_web_page_preview=True
+        )
+        
+
