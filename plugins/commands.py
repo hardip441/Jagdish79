@@ -127,39 +127,68 @@ async def start(client, message):
         except Exception as e:
             print(e)
             return await message.reply_text("something wrong with force subscribe.")
-            
     if len(message.command) == 2 and message.command[1] in ["subscribe", "error", "okay", "help"]:
-        if PREMIUM_AND_REFERAL_MODE == True:
-            buttons = [[
-                InlineKeyboardButton('⤬ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ⤬', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
-            ],[
-                InlineKeyboardButton('ᴀʙᴏᴜᴛ', callback_data='about'),
-                InlineKeyboardButton('ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ', url=CHNL_LNK)
-            ],[
-                InlineKeyboardButton('ʜᴇʟᴘ', callback_data='help'),
-                InlineKeyboardButton('ᴇᴀʀɴ ᴍᴏɴᴇʏ', callback_data="shortlink_info")
-            ],[
-                InlineKeyboardButton('ᴘʀᴇᴍɪᴜᴍ ᴀɴᴅ ʀᴇғᴇʀʀᴀʟ', callback_data='subscription')
-            ]]
-        else:
-        reply_markup = InlineKeyboardMarkup(buttons)      
-        await message.reply_photo(
-            photo=random.choice(PICS),
-            caption=script.START_TXT.format(message.from_user.mention, temp.U_NAME, temp.B_NAME),
-            reply_markup=reply_markup,
-            parse_mode=enums.ParseMode.HTML
+
+    buttons = [[
+        InlineKeyboardButton(
+            '⤬ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ⤬',
+            url=f'http://t.me/{temp.U_NAME}?startgroup=true'
         )
-        return
-    data = message.command[1]
-    if data.split("-", 1)[0] == "VJ":
-        user_id = int(data.split("-", 1)[1])
-        vj = await referal_add_user(user_id, message.from_user.id)
-        if vj and PREMIUM_AND_REFERAL_MODE == True:
-            await message.reply(f"<b>You have joined using the referral link of user with ID {user_id}\n\nSend /start again to use the bot</b>")
-            num_referrals = await get_referal_users_count(user_id)
-            await client.send_message(chat_id = user_id, text = "<b>{} start the bot with your referral link\n\nTotal Referals - {}</b>".format(message.from_user.mention, num_referrals))
-            if num_referrals == REFERAL_COUNT:
-                time = REFERAL_PRE
+    ], [
+        InlineKeyboardButton('ᴀʙᴏᴜᴛ', callback_data='about'),
+        InlineKeyboardButton('ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ', url=CHNL_LNK)
+    ], [
+        InlineKeyboardButton('ʜᴇʟᴘ', callback_data='help'),
+        InlineKeyboardButton('ᴇᴀʀɴ ᴍᴏɴᴇʏ', callback_data="shortlink_info")
+    ]]
+
+    if PREMIUM_AND_REFERAL_MODE:
+        buttons.append([
+            InlineKeyboardButton(
+                'ᴘʀᴇᴍɪᴜᴍ ᴀɴᴅ ʀᴇғᴇʀʀᴀʟ',
+                callback_data='subscription'
+            )
+        ])
+
+    reply_markup = InlineKeyboardMarkup(buttons)
+
+    await message.reply_photo(
+        photo=random.choice(PICS),
+        caption=script.START_TXT.format(
+            message.from_user.mention,
+            temp.U_NAME,
+            temp.B_NAME
+        ),
+        reply_markup=reply_markup,
+        parse_mode=enums.ParseMode.HTML
+    )
+    return
+
+
+data = message.command[1]
+
+if data.split("-", 1)[0] == "VJ":
+    user_id = int(data.split("-", 1)[1])
+    vj = await referal_add_user(user_id, message.from_user.id)
+
+    if vj and PREMIUM_AND_REFERAL_MODE:
+        await message.reply(
+            f"<b>You have joined using the referral link of user with ID {user_id}\n\n"
+            "Send /start again to use the bot</b>"
+        )
+
+        num_referrals = await get_referal_users_count(user_id)
+
+        await client.send_message(
+            chat_id=user_id,
+            text=(
+                f"<b>{message.from_user.mention} start the bot with your referral link\n\n"
+                f"Total Referals - {num_referrals}</b>"
+            )
+        )
+
+        if num_referrals == REFERAL_COUNT:
+            time = REFERAL_PRE
          buttons = [[
                 InlineKeyboardButton('⤬ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ⤬', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
             ],[
@@ -171,6 +200,7 @@ async def start(client, message):
             ],[
                 InlineKeyboardButton('ᴘʀᴇᴍɪᴜᴍ ᴀɴᴅ ʀᴇғᴇʀʀᴀʟ', callback_data='subscription')
             ]]
+    
         MEIUM_TIME       
                 seconds = await get_seconds(time)
                 if seconds > 0:
@@ -1393,6 +1423,7 @@ async def purge_requests(client, message):
             parse_mode=enums.ParseMode.MARKDOWN,
             disable_web_page_preview=True
         )
+
 
 
 
