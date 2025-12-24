@@ -188,23 +188,25 @@ if data.split("-", 1)[0] == "VJ":
                 InlineKeyboardButton('ᴘʀᴇᴍɪᴜᴍ ᴀɴᴅ ʀᴇғᴇʀʀᴀʟ', callback_data='subscription')
             ]]
 
-            seconds = await get_seconds(time)
-            if seconds > 0:
-                expiry_time = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
-                user_data = {"id": user_id, "expiry_time": expiry_time}
+        
+seconds = await get_seconds(time)
+if seconds > 0:
+    expiry_time = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
+    user_data = {"id": user_id, "expiry_time": expiry_time}
 
-                await db.update_user(user_data)
-                await delete_all_referal_users(user_id)
+    await db.update_user(user_data)
+    await delete_all_referal_users(user_id)
 
-                await client.send_message(
-                    chat_id=user_id,
-                    text=(
-                        "<b>You Have Successfully Completed Total Referal.\n\n"
-                        f"You Added In Premium For {REFERAL_PREMEIUM_TIME}</b>"
-                    )
-                )
-            return
-        else:
+    await client.send_message(
+        chat_id=user_id,
+        text=(
+            "<b>You Have Successfully Completed Total Referal.\n\n"
+            f"You Added In Premium For {REFERAL_PREMEIUM_TIME}</b>"
+        )
+    )
+    return
+
+else:
     if PREMIUM_AND_REFERAL_MODE == True:
         buttons = [[
             InlineKeyboardButton(
@@ -220,29 +222,42 @@ if data.split("-", 1)[0] == "VJ":
         ],[
             InlineKeyboardButton('ᴘʀᴇᴍɪᴜᴍ ᴀɴᴅ ʀᴇғᴇʀʀᴀʟ', callback_data='subscription')
         ]]
-            else:
-                buttons = [[
-                InlineKeyboardButton('⤬ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ⤬', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
-            ],[
-                InlineKeyboardButton('ᴀʙᴏᴜᴛ', callback_data='about'),
-                InlineKeyboardButton('ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ', url=CHNL_LNK)
-            ],[
-                InlineKeyboardButton('ʜᴇʟᴘ', callback_data='help'),
-                InlineKeyboardButton('ᴇᴀʀɴ ᴍᴏɴᴇʏ', callback_data="shortlink_info")
-            ],[
-                InlineKeyboardButton('ᴘʀᴇᴍɪᴜᴍ ᴀɴᴅ ʀᴇғᴇʀʀᴀʟ', callback_data='subscription')
-            ]]
-            reply_markup = InlineKeyboardMarkup(buttons)
-            m=await message.reply_sticker("CAACAgIAAxkBAAK6a2lFiYRGXhZWUnbyoNmawLFzXJMmAAJvPQACSgThSVvFRwJ3swa3NgQ") 
-            await asyncio.sleep(1)
-            await m.delete()
-            await message.reply_photo(
-                photo=random.choice(PICS),
-                caption=script.START_TXT.format(message.from_user.mention, temp.U_NAME, temp.B_NAME),
-                reply_markup=reply_markup,
-                parse_mode=enums.ParseMode.HTML
+    else:
+        buttons = [[
+            InlineKeyboardButton(
+                '⤬ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ⤬',
+                url=f'http://t.me/{temp.U_NAME}?startgroup=true'
             )
-            return 
+        ],[
+            InlineKeyboardButton('ᴀʙᴏᴜᴛ', callback_data='about'),
+            InlineKeyboardButton('ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ', url=CHNL_LNK)
+        ],[
+            InlineKeyboardButton('ʜᴇʟᴘ', callback_data='help'),
+            InlineKeyboardButton('ᴇᴀʀɴ ᴍᴏɴᴇʏ', callback_data="shortlink_info")
+        ],[
+            InlineKeyboardButton('ᴘʀᴇᴍɪᴜᴍ ᴀɴᴅ ʀᴇғᴇʀʀᴀʟ', callback_data='subscription')
+        ]]
+
+    reply_markup = InlineKeyboardMarkup(buttons)
+
+    m = await message.reply_sticker(
+        "CAACAgIAAxkBAAK6a2lFiYRGXhZWUnbyoNmawLFzXJMmAAJvPQACSgThSVvFRwJ3swa3NgQ"
+    )
+    await asyncio.sleep(1)
+    await m.delete()
+
+    await message.reply_photo(
+        photo=random.choice(PICS),
+        caption=script.START_TXT.format(
+            message.from_user.mention,
+            temp.U_NAME,
+            temp.B_NAME
+        ),
+        reply_markup=reply_markup,
+        parse_mode=enums.ParseMode.HTML
+    )
+    return
+            
     try:
         pre, file_id = data.split('_', 1)
     except:
@@ -1420,6 +1435,7 @@ async def purge_requests(client, message):
             disable_web_page_preview=True
         )
         
+
 
 
 
