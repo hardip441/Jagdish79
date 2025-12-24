@@ -1,5 +1,5 @@
 # Don't Remove Credit @VJ_Bots
-# Subscribe YouTube Channel For Amazing Bot @Tech_VJ
+# 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
 # Ask Doubt on telegram @KingVJ01
 
 import os, string, logging, random, asyncio, time, datetime, re, sys, json, base64
@@ -1524,6 +1524,7 @@ async def purge_requests(client, message):
             disable_web_page_preview=True
         )
         
+
 
 
 
