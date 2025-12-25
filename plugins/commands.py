@@ -321,8 +321,9 @@ async def start(client: Client, message: Message):
             "ℹ️ Use menu buttons below.",
         )
         return
+# ========================= Plan & MyPlan ========================= #
 
-@Client.on_message(filters.command(["plan", "myplan"]) & filters.private)
+@Client.on_message(filters.command("plan") & filters.private)
 async def plan_command(client, message):
 
     text = (
@@ -340,21 +341,50 @@ async def plan_command(client, message):
     )
 
     buttons = [
-        [InlineKeyboardButton("💬 Contact Admin", url="https://t.me/bambhaniya_jagdish_79")],
+        [InlineKeyboardButton("💬 Contact Admin", url="https://t.me/bambhaniya_jagdish_79")]
     ]
 
-    if PREMIUM_AND_REFERAL_MODE == True:
-        buttons.append(
-            [InlineKeyboardButton("👥 Refer & Earn", callback_data="refer_info")]
-        )
-
-    reply_markup = InlineKeyboardMarkup(buttons)
+    if PREMIUM_AND_REFERAL_MODE:
+        buttons.append([InlineKeyboardButton("👥 Refer & Earn", callback_data="refer_info")])
 
     await message.reply_text(
         text=text,
-        reply_markup=reply_markup,
+        reply_markup=InlineKeyboardMarkup(buttons),
         disable_web_page_preview=True
     )
+
+
+@Client.on_message(filters.command("myplan") & filters.private)
+async def myplan_command(client, message):
+
+    user_id = message.from_user.id
+
+    # check premium
+    if not await db.has_premium_access(user_id):
+        return await message.reply_text(
+            "<b>❌ You don't have any active premium plan.</b>\n\n"
+            "💎 Buy premium to unlock all features.\n"
+            "👉 Send /plan"
+        )
+
+    # get premium data
+    premium = await db.get_premium(user_id)
+
+    start_time = datetime.fromtimestamp(premium["start_time"])
+    end_time = datetime.fromtimestamp(premium["end_time"])
+
+    remaining_days = (end_time - datetime.now()).days
+
+    text = (
+        "<b>👤 YOUR PREMIUM DETAILS</b>\n\n"
+        f"✅ <b>Status:</b> Active\n"
+        f"📅 <b>Plan Started:</b> {start_time.strftime('%d %b %Y')}\n"
+        f"⏳ <b>Plan Expiry:</b> {end_time.strftime('%d %b %Y')}\n"
+        f"🕒 <b>Days Remaining:</b> {remaining_days} days\n\n"
+        "❤️ Thank you for supporting us!"
+    )
+
+    await message.reply_text(text)
 
 
 # ========================= GROUP MESSAGE HANDLER ========================= #
@@ -757,6 +787,7 @@ async def about_cmd(client: Client, message: Message):
 
 
 # ========================= END OF FILE ========================= #
+
 
 
 
