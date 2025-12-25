@@ -160,3 +160,149 @@ async def start(client: Client, message: Message):
             )
                 )
         
+# -------- FORCE SUBSCRIBE -------- #
+
+    if AUTH_CHANNEL:
+        try:
+            subscribed = await is_subscribed(client, message)
+        except Exception:
+            subscribed = False
+
+        if not subscribed:
+            try:
+                if REQUEST_TO_JOIN_MODE:
+                    invite = await client.create_chat_invite_link(
+                        chat_id=int(AUTH_CHANNEL),
+                        creates_join_request=True
+                    )
+                else:
+                    invite = await client.create_chat_invite_link(
+                        chat_id=int(AUTH_CHANNEL)
+                    )
+            except ChatAdminRequired:
+                await message.reply_text("❌ Bot must be admin in force-sub channel")
+                return
+
+            buttons = [
+                [InlineKeyboardButton("📢 Join Channel", url=invite.invite_link)]
+            ]
+
+            if TRY_AGAIN_BTN:
+                buttons.append(
+                    [InlineKeyboardButton("🔁 Try Again", callback_data="checksub")]
+                )
+
+            await message.reply_text(
+                text="⚠️ You must join our channel to use this bot.",
+                reply_markup=InlineKeyboardMarkup(buttons)
+            )
+            return
+
+    # -------- NORMAL START (NO PAYLOAD) -------- #
+
+    if len(message.command) == 1:
+
+        if PREMIUM_AND_REFERAL_MODE:
+            buttons = [
+                [
+                    InlineKeyboardButton(
+                        "⤬ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ⤬",
+                        url=f"https://t.me/{temp.U_NAME}?startgroup=true"
+                    )
+                ],
+                [
+                    InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data="about"),
+                    InlineKeyboardButton("ᴜᴘᴅᴀᴛᴇs", url=CHNL_LNK)
+                ],
+                [
+                    InlineKeyboardButton("ʜᴇʟᴘ", callback_data="help"),
+                    InlineKeyboardButton("ᴇᴀʀɴ", callback_data="shortlink_info")
+                ],
+                [
+                    InlineKeyboardButton(
+                        "👑 Premium & Referral",
+                        callback_data="subscription"
+                    )
+                ]
+            ]
+        else:
+            buttons = [
+                [
+                    InlineKeyboardButton(
+                        "⤬ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ⤬",
+                        url=f"https://t.me/{temp.U_NAME}?startgroup=true"
+                    )
+                ],
+                [
+                    InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data="about"),
+                    InlineKeyboardButton("ᴜᴘᴅᴀᴛᴇs", url=CHNL_LNK)
+                ],
+                [
+                    InlineKeyboardButton("ʜᴇʟᴘ", callback_data="help")
+                ]
+            ]
+
+        if CLONE_MODE:
+            buttons.append(
+                [InlineKeyboardButton("🤖 Create Clone Bot", callback_data="clone")]
+            )
+
+        await message.reply_photo(
+            photo=random.choice(PICS),
+            caption=script.START_TXT.format(
+                message.from_user.mention,
+                temp.U_NAME,
+                temp.B_NAME
+            ),
+            reply_markup=InlineKeyboardMarkup(buttons),
+            parse_mode=enums.ParseMode.HTML
+        )
+        return
+
+    # -------- START PAYLOAD -------- #
+
+    data = message.command[1]
+
+    # -------- REFERRAL PAYLOAD -------- #
+    if data.startswith("VJ-"):
+        try:
+            ref_user = int(data.split("-", 1)[1])
+            added = await referal_add_user(ref_user, message.from_user.id)
+
+            if added and PREMIUM_AND_REFERAL_MODE:
+                await message.reply_text(
+                    "✅ Referral registered!\n\nSend /start again."
+                )
+
+                total = await get_referal_users_count(ref_user)
+
+                await client.send_message(
+                    chat_id=ref_user,
+                    text=f"🎉 New referral joined!\nTotal referrals: {total}"
+                )
+
+                if total >= REFERAL_COUNT:
+                    seconds = await get_seconds(REFERAL_PREMEIUM_TIME)
+                    if seconds > 0:
+                        expire = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
+                        await db.update_user({
+                            "id": ref_user,
+                            "expiry_time": expire
+                        })
+                        await delete_all_referal_users(ref_user)
+
+                        await client.send_message(
+                            chat_id=ref_user,
+                            text="👑 You are now Premium user!"
+                        )
+            return
+        except Exception as e:
+            logger.error(f"Referral error: {e}")
+
+    # -------- SIMPLE PAYLOADS -------- #
+
+    if data in ["help", "about", "subscribe", "okay", "error"]:
+        await message.reply_text(
+            "ℹ️ Use menu buttons below.",
+        )
+        return
