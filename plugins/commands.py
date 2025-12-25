@@ -415,3 +415,106 @@ async def auto_send_files(client, message, files, settings):
             await asyncio.sleep(e.value)
         except Exception:
             continue
+
+# ========================= CALLBACK QUERY HANDLER ========================= #
+
+@Client.on_callback_query()
+async def cb_handler(client: Client, query: CallbackQuery):
+
+    data = query.data
+    user_id = query.from_user.id
+    message = query.message
+
+    try:
+        await query.answer()
+    except Exception:
+        pass
+
+    # -------- FORCE SUB CHECK (CALLBACK) -------- #
+    if AUTH_CHANNEL and not await pub_is_subscribed(client, message):
+        await query.answer("❌ Join channel first!", show_alert=True)
+        return
+
+    # -------- FILE DOWNLOAD CALLBACK -------- #
+    if data.startswith("file_"):
+
+        file_id = data.split("_", 1)[1]
+
+        # ---- verification check ---- #
+        if VERIFY:
+            verified = await check_verification(user_id)
+            if not verified:
+                token = await get_token(user_id)
+                link = f"https://t.me/{temp.U_NAME}?start=verify_{token}"
+                await query.answer("⚠️ Please verify first", show_alert=True)
+                await message.reply_text(
+                    "🔐 Verification required",
+                    reply_markup=InlineKeyboardMarkup(
+                        [[InlineKeyboardButton("✅ Verify", url=link)]]
+                    )
+                )
+                return
+
+        # ---- shortlink check ---- #
+        if SHORTLINK_MODE and not await db.has_premium_access(user_id):
+            short = await get_shortlink(user_id, file_id)
+            await query.answer("🔗 Get link to download", show_alert=True)
+            await message.reply_text(
+                "⬇️ Click below to download",
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("⬇️ Download", url=short)]]
+                )
+            )
+            return
+
+        # ---- send actual file ---- #
+        file = await get_file_details(file_id)
+        if not file:
+            await query.answer("❌ File not found", show_alert=True)
+            return
+
+        try:
+            await client.send_cached_media(
+                chat_id=user_id,
+                file_id=file.file_id,
+                caption=CUSTOM_FILE_CAPTION.format(
+                    file_name=file.file_name,
+                    file_size=get_size(file.file_size)
+                ),
+                protect_content=PROTECT_CONTENT
+            )
+        except FloodWait as e:
+            await asyncio.sleep(e.value)
+        except Exception as e:
+            logger.error(f"Send file error: {e}")
+
+        return
+
+    # -------- VERIFY CALLBACK -------- #
+    if data.startswith("verify_"):
+        token = data.split("_", 1)[1]
+        ok = await check_token(user_id, token)
+
+        if ok:
+            await query.answer("✅ Verified Successfully", show_alert=True)
+            await message.edit_text("✅ You are verified, send your search again.")
+        else:
+            await query.answer("❌ Invalid or expired token", show_alert=True)
+        return
+
+    # -------- BATCH FILE CALLBACK -------- #
+    if data.startswith("batch_"):
+        batch_id = data.split("_", 1)[1]
+        BATCH_FILES[user_id] = batch_id
+
+        await query.answer("📦 Batch started", show_alert=True)
+        await message.reply_text(
+            "📦 Batch request received.\nSend /start again to receive files."
+        )
+        return
+
+    # -------- TRY AGAIN FORCE SUB -------- #
+    if data == "checksub":
+        await query.answer("🔁 Checking subscription...")
+        await message.delete()
+        return
