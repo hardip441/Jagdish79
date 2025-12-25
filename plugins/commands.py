@@ -306,3 +306,112 @@ async def start(client: Client, message: Message):
             "ℹ️ Use menu buttons below.",
         )
         return
+
+# ========================= GROUP MESSAGE HANDLER ========================= #
+
+@Client.on_message(
+    filters.text
+    & filters.group
+    & ~filters.command(["start", "help", "about"])
+)
+async def group_message_handler(client: Client, message: Message):
+
+    if not message.text:
+        return
+
+    chat_id = message.chat.id
+    user_id = message.from_user.id if message.from_user else 0
+    query = message.text.strip()
+
+    settings = await get_settings(chat_id)
+
+    if settings is None:
+        await save_group_settings(chat_id)
+        settings = await get_settings(chat_id)
+
+    # -------- AUTH CHANNEL CHECK -------- #
+    if AUTH_CHANNEL and not await pub_is_subscribed(client, message):
+        try:
+            await message.delete()
+        except Exception:
+            pass
+        return
+
+    # -------- VERIFICATION CHECK -------- #
+    if VERIFY:
+        verified = await check_verification(user_id)
+        if not verified:
+            token = await get_token(user_id)
+            link = f"https://t.me/{temp.U_NAME}?start=verify_{token}"
+
+            buttons = [
+                [InlineKeyboardButton("✅ Verify", url=link)]
+            ]
+
+            await message.reply_text(
+                "⚠️ Please verify yourself to use this bot.",
+                reply_markup=InlineKeyboardMarkup(buttons)
+            )
+            return
+
+    # -------- AUTO FILTER SEARCH -------- #
+
+    files = await get_file_details(query)
+
+    if not files:
+        return
+
+    await auto_send_files(
+        client=client,
+        message=message,
+        files=files,
+        settings=settings
+    )
+
+
+# ========================= AUTO SEND FILES ========================= #
+
+async def auto_send_files(client, message, files, settings):
+
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+
+    sent = 0
+
+    for file in files:
+
+        if sent >= MAX_B_TN:
+            break
+
+        file_id = unpack_new_file_id(file.file_id)
+        file_name = file.file_name
+        file_size = get_size(file.file_size)
+
+        caption = CUSTOM_FILE_CAPTION.format(
+            file_name=file_name,
+            file_size=file_size
+        )
+
+        # -------- SHORTLINK CHECK -------- #
+        if SHORTLINK_MODE and not await db.has_premium_access(user_id):
+            short = await get_shortlink(user_id, file_id)
+            buttons = [
+                [InlineKeyboardButton("⬇️ Get File", url=short)]
+            ]
+        else:
+            buttons = [
+                [InlineKeyboardButton("⬇️ Download", callback_data=f"file_{file_id}")]
+            ]
+
+        try:
+            await client.send_message(
+                chat_id=chat_id,
+                text=caption,
+                reply_markup=InlineKeyboardMarkup(buttons),
+                protect_content=PROTECT_CONTENT
+            )
+            sent += 1
+        except FloodWait as e:
+            await asyncio.sleep(e.value)
+        except Exception:
+            continue
