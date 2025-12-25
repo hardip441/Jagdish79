@@ -618,3 +618,92 @@ async def clear_logs(client: Client, message: Message):
         await message.reply_text("🧹 Cleaning cache done.")
     except Exception:
         pass
+
+# ========================= MENU CALLBACKS ========================= #
+
+@Client.on_callback_query(filters.regex("^about$"))
+async def about_cb(client: Client, query: CallbackQuery):
+
+    await query.answer()
+    await query.message.edit_text(
+        text=script.ABOUT_TXT,
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("🔙 Back", callback_data="home")]]
+        ),
+        disable_web_page_preview=True
+    )
+
+
+@Client.on_callback_query(filters.regex("^help$"))
+async def help_cb(client: Client, query: CallbackQuery):
+
+    await query.answer()
+    await query.message.edit_text(
+        text=script.HELP_TXT,
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("🔙 Back", callback_data="home")]]
+        ),
+        disable_web_page_preview=True
+    )
+
+
+@Client.on_callback_query(filters.regex("^subscription$"))
+async def subscription_cb(client: Client, query: CallbackQuery):
+
+    await query.answer()
+    await query.message.edit_text(
+        text=PAYMENT_TEXT,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton("💳 Buy Premium", url=OWNER_LNK)],
+                [InlineKeyboardButton("🔙 Back", callback_data="home")]
+            ]
+        )
+    )
+
+
+@Client.on_callback_query(filters.regex("^home$"))
+async def home_cb(client: Client, query: CallbackQuery):
+
+    await query.answer()
+
+    buttons = [
+        [
+            InlineKeyboardButton(
+                "⤬ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ⤬",
+                url=f"https://t.me/{temp.U_NAME}?startgroup=true"
+            )
+        ],
+        [
+            InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data="about"),
+            InlineKeyboardButton("ʜᴇʟᴘ", callback_data="help")
+        ],
+        [
+            InlineKeyboardButton("👑 Premium", callback_data="subscription")
+        ]
+    ]
+
+    await query.message.edit_text(
+        text=script.START_TXT.format(
+            query.from_user.mention,
+            temp.U_NAME,
+            temp.B_NAME
+        ),
+        reply_markup=InlineKeyboardMarkup(buttons),
+        disable_web_page_preview=True
+    )
+
+
+# ========================= SAFETY FALLBACK ========================= #
+
+@Client.on_message(filters.private & filters.command("help"))
+async def help_cmd(client: Client, message: Message):
+    await message.reply_text(script.HELP_TXT)
+
+
+@Client.on_message(filters.private & filters.command("about"))
+async def about_cmd(client: Client, message: Message):
+    await message.reply_text(script.ABOUT_TXT)
+
+
+# ========================= END OF FILE ========================= #
