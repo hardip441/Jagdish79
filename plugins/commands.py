@@ -322,6 +322,41 @@ async def start(client: Client, message: Message):
         )
         return
 
+@Client.on_message(filters.command(["plan", "myplan"]) & filters.private)
+async def plan_command(client, message):
+
+    text = (
+        "<b>💎 PREMIUM PLANS</b>\n\n"
+        "🚀 Unlock all premium features:\n"
+        "• No Shortlink\n"
+        "• Unlimited Files\n"
+        "• Faster Access\n"
+        "• Priority Support\n\n"
+        "<b>💰 Pricing:</b>\n"
+        "🔹 1 Month  - ₹99\n"
+        "🔹 3 Months - ₹249\n"
+        "🔹 Lifetime - ₹499\n\n"
+        "📩 Contact Admin to buy premium 👇"
+    )
+
+    buttons = [
+        [InlineKeyboardButton("💬 Contact Admin", url="https://t.me/YourUsername")],
+    ]
+
+    if PREMIUM_AND_REFERAL_MODE == True:
+        buttons.append(
+            [InlineKeyboardButton("👥 Refer & Earn", callback_data="refer_info")]
+        )
+
+    reply_markup = InlineKeyboardMarkup(buttons)
+
+    await message.reply_text(
+        text=text,
+        reply_markup=reply_markup,
+        disable_web_page_preview=True
+    )
+
+
 # ========================= GROUP MESSAGE HANDLER ========================= #
 
 @Client.on_message(
@@ -722,5 +757,6 @@ async def about_cmd(client: Client, message: Message):
 
 
 # ========================= END OF FILE ========================= #
+
 
 
