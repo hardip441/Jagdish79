@@ -340,7 +340,7 @@ async def plan_command(client, message):
     )
 
     buttons = [
-        [InlineKeyboardButton("💬 Contact Admin", url="https://t.me/YourUsername")],
+        [InlineKeyboardButton("💬 Contact Admin", url="https://t.me/bambhaniya_jagdish_79")],
     ]
 
     if PREMIUM_AND_REFERAL_MODE == True:
@@ -757,6 +757,7 @@ async def about_cmd(client: Client, message: Message):
 
 
 # ========================= END OF FILE ========================= #
+
 
 
 
