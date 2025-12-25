@@ -118,6 +118,14 @@ async def start(client: Client, message: Message):
     except Exception:
         pass
 
+    # -------- PRIVATE START STICKER -------- #
+    sticker_msg = None
+    if message.chat.type == enums.ChatType.PRIVATE:
+        try:
+            sticker_msg = await message.reply_sticker("PASTE_STICKER_ID_HERE")
+        except Exception:
+            pass
+
     # -------- GROUP START -------- #
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
 
@@ -707,3 +715,4 @@ async def about_cmd(client: Client, message: Message):
 
 
 # ========================= END OF FILE ========================= #
+
