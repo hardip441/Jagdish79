@@ -145,6 +145,13 @@ async def start(client: Client, message: Message):
             ]
         ]
 
+        if sticker_msg:
+            try:
+                await asyncio.sleep(2)
+                await sticker_msg.delete()
+            except Exception:
+                pass
+        
         await message.reply(
             text=script.START_TXT.format(
                 message.from_user.mention if message.from_user else message.chat.title,
@@ -715,4 +722,5 @@ async def about_cmd(client: Client, message: Message):
 
 
 # ========================= END OF FILE ========================= #
+
 
