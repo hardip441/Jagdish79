@@ -518,3 +518,103 @@ async def cb_handler(client: Client, query: CallbackQuery):
         await query.answer("🔁 Checking subscription...")
         await message.delete()
         return
+
+# ========================= BATCH FILE SENDER ========================= #
+
+@Client.on_message(filters.command("batch") & filters.private)
+async def batch_command(client: Client, message: Message):
+
+    user_id = message.from_user.id
+
+    if user_id not in BATCH_FILES:
+        await message.reply_text("❌ No batch request found.")
+        return
+
+    batch_id = BATCH_FILES.get(user_id)
+
+    status = await message.reply_text("⏳ Processing batch files...")
+
+    try:
+        files = await get_file_details(batch_id)
+    except Exception:
+        await status.edit("❌ Failed to fetch batch files.")
+        return
+
+    sent_msgs = []
+
+    for file in files:
+        try:
+            file_id = unpack_new_file_id(file.file_id)
+            file_name = file.file_name
+            file_size = get_size(file.file_size)
+
+            caption = CUSTOM_FILE_CAPTION.format(
+                file_name=file_name,
+                file_size=file_size
+            )
+
+            # -------- STREAM MODE -------- #
+            if STREAM_MODE:
+                log_msg = await client.send_cached_media(
+                    chat_id=LOG_CHANNEL,
+                    file_id=file.file_id
+                )
+
+                stream = f"{URL}watch/{log_msg.id}/{quote_plus(get_name(log_msg))}?hash={get_hash(log_msg)}"
+                download = f"{URL}{log_msg.id}/{quote_plus(get_name(log_msg))}?hash={get_hash(log_msg)}"
+
+                buttons = [
+                    [
+                        InlineKeyboardButton("▶️ Watch", url=stream),
+                        InlineKeyboardButton("⬇️ Download", url=download)
+                    ]
+                ]
+
+                sent = await client.send_message(
+                    chat_id=user_id,
+                    text=caption,
+                    reply_markup=InlineKeyboardMarkup(buttons)
+                )
+
+            else:
+                sent = await client.send_cached_media(
+                    chat_id=user_id,
+                    file_id=file.file_id,
+                    caption=caption,
+                    protect_content=PROTECT_CONTENT
+                )
+
+            sent_msgs.append(sent)
+
+        except FloodWait as e:
+            await asyncio.sleep(e.value)
+        except Exception as e:
+            logger.error(f"Batch send error: {e}")
+            continue
+
+    await status.edit("✅ Batch completed!")
+
+    # -------- AUTO DELETE AFTER 10 MIN -------- #
+    await asyncio.sleep(600)
+
+    for msg in sent_msgs:
+        try:
+            await msg.delete()
+        except Exception:
+            pass
+
+    try:
+        del BATCH_FILES[user_id]
+    except Exception:
+        pass
+
+
+# ========================= STREAM CLEANUP ========================= #
+
+@Client.on_message(filters.command("clear") & filters.user(ADMINS))
+async def clear_logs(client: Client, message: Message):
+
+    try:
+        await message.reply_text("🧹 Cleaning cache done.")
+    except Exception:
+        pass
