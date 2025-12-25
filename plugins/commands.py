@@ -122,7 +122,7 @@ async def start(client: Client, message: Message):
     sticker_msg = None
     if message.chat.type == enums.ChatType.PRIVATE:
         try:
-            sticker_msg = await message.reply_sticker("PASTE_STICKER_ID_HERE")
+            sticker_msg = await message.reply_sticker("CAACAgIAAxkBAAKa1Weu-cAFlaKn6nLLfZnMr6CZyq0vAAJvPQACSgThSVvFRwJ3swa3NgQ")
         except Exception:
             pass
 
