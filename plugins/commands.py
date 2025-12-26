@@ -226,7 +226,7 @@ async def start(client: Client, message: Message):
                     )
                 ],
                 [
-                    InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data="about"),
+                    InlineKeyboardButton('ᴀʙᴏᴜᴛ', callback_data='about'),
                     InlineKeyboardButton("ᴜᴘᴅᴀᴛᴇs", url=CHNL_LNK)
                 ],
                 [
@@ -787,6 +787,7 @@ async def about_cmd(client: Client, message: Message):
 
 
 # ========================= END OF FILE ========================= #
+
 
 
 
