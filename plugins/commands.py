@@ -510,6 +510,19 @@ async def cb_handler(client: Client, query: CallbackQuery):
     except Exception:
         pass
 
+@Client.on_callback_query(filters.regex("^shortlink_info$"))
+async def shortlink_info_cb(client: Client, query: CallbackQuery):
+
+    await query.answer()
+
+    await query.message.edit_text(
+        text=script.SHORTLINK_INFO_TXT,
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("🔙 Back", callback_data="home")]]
+        ),
+        disable_web_page_preview=True
+    )
+
     # -------- FORCE SUB CHECK (CALLBACK) -------- #
     if AUTH_CHANNEL and not await pub_is_subscribed(client, message):
         await query.answer("❌ Join channel first!", show_alert=True)
